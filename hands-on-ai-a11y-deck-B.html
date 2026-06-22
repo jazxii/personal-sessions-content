@@ -1,0 +1,1078 @@
+<div id="deck">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --indigo:#4F46E5;--indigo-2:#6366F1;--indigo-3:#818CF8;--indigo-dk:#3730A3;
+    --emerald:#10B981;--emerald-2:#34D399;--teal:#0D9488;
+    --navy:#0F172A;--navy-2:#1E293B;--navy-3:#334155;
+    --slate-50:#F8FAFC;--slate-100:#F1F5F9;--slate-200:#E2E8F0;--slate-300:#CBD5E1;
+    --slate-500:#64748B;--slate-600:#475569;--slate-700:#334155;--slate-900:#0F172A;
+    --rose:#F43F5E;--amber:#F59E0B;--violet:#8B5CF6;
+  }
+  html,body{height:100%;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--slate-900);background:#fff;-webkit-font-smoothing:antialiased}
+  #deck{width:100%;height:100vh;overflow:hidden;position:relative;background:#0f172a}
+  .stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px}
+  .slide{width:min(1280px,100%);aspect-ratio:16/9;max-height:calc(100vh - 80px);background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.45);overflow:hidden;position:relative;display:none;flex-direction:column}
+  .slide.active{display:flex;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .slide-inner{flex:1;display:flex;flex-direction:column;padding:36px 54px;position:relative;overflow:hidden}
+  .slide.dark{background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#312e81 100%);color:#fff}
+  .slide.dark .kicker{color:#a5b4fc}
+  .slide.dark .muted{color:#cbd5e1}
+
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;letter-spacing:-.01em}
+  .brand-mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#10B981,#0D9488);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;box-shadow:0 2px 8px rgba(16,185,129,.35)}
+  .top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .kicker{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--indigo)}
+  h1.title{font-size:48px;line-height:1.05;letter-spacing:-.025em;font-weight:800;margin-top:6px}
+  h2.title{font-size:32px;line-height:1.1;letter-spacing:-.02em;font-weight:800;margin-top:4px}
+  h2.title .grad{background:linear-gradient(90deg,#10B981 0%,#06B6D4 50%,#4F46E5 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  h3.subtle{font-size:15.5px;font-weight:500;color:var(--slate-600);margin-top:10px;line-height:1.5;max-width:90%}
+  .slide.dark h3.subtle{color:#cbd5e1}
+
+  .footer{display:flex;align-items:center;justify-content:space-between;padding:0 54px 18px;font-size:11.5px;color:var(--slate-500)}
+  .slide.dark .footer{color:#94a3b8}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--indigo);display:inline-block;margin:0 8px;vertical-align:middle}
+
+  .nav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:rgba(15,23,42,.85);backdrop-filter:blur(10px);padding:8px 12px;border-radius:999px;color:#fff;font-size:12px;z-index:50;border:1px solid rgba(255,255,255,.08)}
+  .nav button{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .nav button:hover{background:var(--indigo);border-color:var(--indigo)}
+  .nav .count{padding:0 8px;font-variant-numeric:tabular-nums;font-weight:600}
+  .progress{position:fixed;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,.08);z-index:50}
+  .progress .bar{height:100%;background:linear-gradient(90deg,#10B981,#06B6D4,#4F46E5);transition:width .35s ease}
+
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .card{background:#fff;border:1px solid var(--slate-200);border-radius:12px;padding:16px}
+  .card.glass{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#fff}
+  .card .label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-500);margin-bottom:6px}
+  .card.glass .label{color:#a5b4fc}
+  .card .desc{font-size:12.5px;color:var(--slate-600);margin-top:4px;line-height:1.5}
+  .card.glass .desc{color:#cbd5e1}
+
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:#EEF2FF;color:var(--indigo-dk);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .pill.green{background:#ECFDF5;color:#065F46}
+  .pill.amber{background:#FFFBEB;color:#92400E}
+  .pill.rose{background:#FFF1F2;color:#9F1239}
+  .pill.dark{background:rgba(165,180,252,.15);color:#a5b4fc}
+  .pill.gray{background:#F1F5F9;color:#475569}
+
+  .bullets{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .b-row{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.55;color:var(--slate-700)}
+  .b-row .ic{flex-shrink:0;width:20px;height:20px;border-radius:6px;background:#EEF2FF;color:var(--indigo);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;margin-top:1px}
+  .slide.dark .b-row{color:#e2e8f0}
+  .slide.dark .b-row .ic{background:rgba(99,102,241,.2);color:#a5b4fc}
+
+  .title-slide{background:radial-gradient(ellipse at top left,#1e293b 0%,#0f172a 50%,#020617 100%);color:#fff;align-items:center;justify-content:center;text-align:center}
+  .title-slide .mega{font-size:72px;line-height:1;font-weight:800;letter-spacing:-.03em;margin:14px 0 10px}
+  .title-slide .mega .grad{background:linear-gradient(90deg,#34D399 0%,#06B6D4 40%,#818CF8 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .title-slide .tag{font-size:19px;color:#cbd5e1;margin-bottom:24px;max-width:760px}
+  .title-slide .meta{display:flex;gap:24px;color:#94a3b8;font-size:12px;letter-spacing:.06em}
+  .glow{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;pointer-events:none}
+  .glow.g1{width:400px;height:400px;background:#4F46E5;top:-100px;right:-100px}
+  .glow.g2{width:350px;height:350px;background:#10B981;bottom:-80px;left:-80px}
+
+  /* Prompt cards — the heart of this deck */
+  .prompt-card{background:linear-gradient(135deg,#0f172a,#1e293b);border:1px solid rgba(165,180,252,.25);border-radius:12px;padding:38px 18px 14px;font-family:'JetBrains Mono','SF Mono',ui-monospace,monospace;font-size:10.5px;line-height:1.5;color:#e2e8f0;position:relative;white-space:pre-wrap;overflow:hidden;min-height:0}
+  .prompt-card.compact{font-size:10px;padding:34px 16px 12px;line-height:1.45}
+  .prompt-card .pc-tag{position:absolute;top:10px;left:16px;background:var(--indigo);color:#fff;padding:3px 10px;border-radius:6px;font-size:9.5px;font-weight:800;letter-spacing:.08em;font-family:'Inter',sans-serif;z-index:2}
+  .prompt-card .pc-copy{position:absolute;top:10px;right:16px;background:rgba(165,180,252,.15);color:#a5b4fc;padding:3px 8px;border-radius:6px;font-size:9px;font-weight:700;letter-spacing:.06em;font-family:'Inter',sans-serif;z-index:2}
+  .prompt-card .hl{color:#a5b4fc;font-weight:600}
+  .prompt-card .hl-g{color:#34D399;font-weight:600}
+  .prompt-card .hl-a{color:#FCD34D;font-weight:600}
+  .prompt-card .cmt{color:#64748B;font-style:italic}
+
+  .annot{display:flex;flex-direction:column;gap:8px}
+  .annot-row{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.5}
+  .annot-row .an-tag{flex-shrink:0;width:auto;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;letter-spacing:.04em;font-family:'JetBrains Mono',monospace;background:#EEF2FF;color:var(--indigo-dk)}
+  .annot-row .an-tag.g{background:#ECFDF5;color:#065F46}
+  .annot-row .an-tag.a{background:#FFFBEB;color:#92400E}
+  .annot-row .an-tag.r{background:#FFF1F2;color:#9F1239}
+  .annot-row p{color:var(--slate-700);flex:1}
+  .slide.dark .annot-row p{color:#e2e8f0}
+
+  /* Lab marker */
+  .lab-marker{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:8px;background:linear-gradient(90deg,#10B981,#06B6D4);color:#fff;font-size:11px;font-weight:800;letter-spacing:.1em}
+  .lab-marker.l2{background:linear-gradient(90deg,#6366F1,#4F46E5)}
+  .lab-marker.l3{background:linear-gradient(90deg,#8B5CF6,#6366F1)}
+
+  /* Tip block */
+  .tip-block{background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(6,182,212,.05));border:1px solid rgba(167,243,208,.4);border-radius:10px;padding:12px 16px;font-size:12.5px;color:var(--slate-700);line-height:1.55;margin-top:12px}
+  .tip-block b{color:#065F46}
+  .slide.dark .tip-block{background:rgba(165,180,252,.08);border-color:rgba(165,180,252,.2);color:#e2e8f0}
+  .slide.dark .tip-block b{color:#a5b4fc}
+
+  /* Pitfall block */
+  .pitfall-block{background:linear-gradient(135deg,rgba(244,63,94,.08),rgba(220,38,38,.04));border:1px solid rgba(254,202,202,.6);border-radius:10px;padding:12px 16px;font-size:12.5px;color:var(--slate-700);line-height:1.55}
+  .pitfall-block b{color:#991B1B}
+
+  /* Agenda items */
+  .agenda-list{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:16px}
+  .agenda-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px}
+  .agenda-item .n{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#10B981,#0D9488);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .agenda-item .t{font-size:13.5px;font-weight:700;color:#fff}
+  .agenda-item .d{font-size:10.5px;color:#94a3b8;letter-spacing:.04em}
+
+  /* Outcome cards */
+  .outcome{background:linear-gradient(180deg,#fff,#F8FAFC);border:1px solid var(--slate-200);border-radius:12px;padding:16px;display:flex;gap:12px;align-items:flex-start}
+  .outcome .o-ic{flex-shrink:0;width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;background:linear-gradient(135deg,#6366F1,#4F46E5)}
+  .outcome.o1 .o-ic{background:linear-gradient(135deg,#10B981,#0D9488)}
+  .outcome.o2 .o-ic{background:linear-gradient(135deg,#06B6D4,#0891B2)}
+  .outcome.o3 .o-ic{background:linear-gradient(135deg,#6366F1,#4F46E5)}
+  .outcome.o4 .o-ic{background:linear-gradient(135deg,#8B5CF6,#6366F1)}
+  .outcome h5{font-size:13.5px;font-weight:800;color:var(--navy);letter-spacing:-.01em}
+  .outcome p{font-size:12px;color:var(--slate-600);line-height:1.5;margin-top:3px}
+
+  .anat-box{background:#F8FAFC;border:1px solid var(--slate-200);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+  .anat-box .at{font-size:10.5px;font-weight:800;letter-spacing:.08em;color:var(--indigo);font-family:'JetBrains Mono',monospace}
+  .anat-box h5{font-size:13px;font-weight:800;color:var(--navy)}
+  .anat-box p{font-size:11.5px;color:var(--slate-600);line-height:1.5}
+  .anat-box.b1 .at{color:#065F46}
+  .anat-box.b2 .at{color:var(--indigo)}
+  .anat-box.b3 .at{color:#5B21B6}
+  .anat-box.b4 .at{color:#9F1239}
+  .anat-box.b5 .at{color:#92400E}
+
+  /* Demo / output mock */
+  .mock-output{background:#fff;border:1px solid var(--slate-200);border-radius:10px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:10.5px;line-height:1.55;color:var(--slate-700);overflow:hidden}
+  .mock-output .mo-h{font-family:'Inter',sans-serif;font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--slate-500);margin-bottom:8px}
+  .mock-output b{color:var(--navy)}
+  .mock-output .gd{color:#065F46;font-weight:700}
+  .mock-output .br{color:#991B1B;font-weight:700}
+
+  .pattern-card{background:linear-gradient(180deg,#fff,#F8FAFC);border:1px solid var(--slate-200);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px}
+  .pattern-card h5{font-size:13px;font-weight:800;color:var(--navy);letter-spacing:-.01em}
+  .pattern-card .pat-ex{background:#0f172a;color:#a5b4fc;padding:6px 10px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:4px}
+  .pattern-card p{font-size:11.5px;color:var(--slate-600);line-height:1.5}
+
+</style>
+
+<div class="progress"><div class="bar" id="bar"></div></div>
+
+<div class="stage">
+
+<!-- ========================= SLIDE 1: TITLE ========================= -->
+<section class="slide active title-slide">
+  <div class="glow g1"></div>
+  <div class="glow g2"></div>
+  <div class="slide-inner" style="align-items:center;justify-content:center;padding:0">
+    <div class="brand-mark" style="width:60px;height:60px;border-radius:15px;font-size:28px">A</div>
+    <div class="mega">Hands-on <span class="grad">AI</span> for</div>
+    <div class="mega" style="margin-top:0">Accessibility Testing</div>
+    <div class="tag">Prompt-based techniques you can run today on ChatGPT, Claude, or Gemini — no special tools required.</div>
+    <div class="meta">
+      <div>L&amp;D TRAINING · SBA PREP</div>
+      <div>·</div>
+      <div>~45 MIN</div>
+      <div>·</div>
+      <div>COGNIZANT · A11Y PRACTICE</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= SLIDE 2: WHAT YOU'LL LEAVE WITH ========================= -->
+<section class="slide dark">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Learning Outcomes</div></div>
+    <h2 class="title" style="color:#fff">What you'll leave this session able to <span style="background:linear-gradient(90deg,#34D399,#06B6D4,#a5b4fc);-webkit-background-clip:text;background-clip:text;color:transparent">do yourself</span></h2>
+    <h3 class="subtle">By the end of this video, you should be able to open ChatGPT (or Claude, or Gemini), paste in a prompt, and produce real accessibility deliverables — the same kind your SBA will ask you to demonstrate.</h3>
+
+    <div class="grid g2" style="margin-top:20px;flex:1;gap:12px">
+      <div class="outcome o1">
+        <div class="o-ic">1</div>
+        <div>
+          <h5>Audit raw HTML for WCAG 2.2 violations</h5>
+          <p>Paste any HTML snippet, get a structured list of issues grouped by WCAG criterion — with severity, user impact, and a suggested fix.</p>
+        </div>
+      </div>
+      <div class="outcome o2">
+        <div class="o-ic">2</div>
+        <div>
+          <h5>Convert raw findings into JIRA-ready defects</h5>
+          <p>Turn axe-core output or your own audit notes into properly formatted defect tickets — title, priority, steps, WCAG ref, fix.</p>
+        </div>
+      </div>
+      <div class="outcome o3">
+        <div class="o-ic">3</div>
+        <div>
+          <h5>Generate ARIA/HTML fixes for violations</h5>
+          <p>Take a broken component, prompt the LLM for a corrected version with explanation, validate it follows the First Rule of ARIA.</p>
+        </div>
+      </div>
+      <div class="outcome o4">
+        <div class="o-ic">4</div>
+        <div>
+          <h5>Write Playwright + axe-core test scripts</h5>
+          <p>Prompt the LLM to generate ready-to-run automated a11y tests — base scripts, WCAG-filtered runs, and custom rules.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>2 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 3: QUICK CONTEXT ========================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Why this works</div></div>
+    <h2 class="title">Accessibility testing is <span style="background:linear-gradient(90deg,#10B981,#06B6D4,#4F46E5);-webkit-background-clip:text;background-clip:text;color:transparent">made for LLMs</span></h2>
+    <h3 class="subtle">A lot of a11y work is reading code, looking up WCAG criteria, and writing structured reports. Three things modern AI is genuinely good at.</h3>
+
+    <div class="grid g3" style="margin-top:20px;flex:1">
+      <div class="card" style="background:linear-gradient(135deg,#ECFDF5,#fff)">
+        <div class="label" style="color:#065F46">READING CODE</div>
+        <div style="font-size:14.5px;font-weight:800;color:var(--navy);margin-top:6px">Spot missing labels, wrong roles, contrast gaps</div>
+        <div class="desc">LLMs trained on millions of HTML examples recognize a11y violations the same way they recognize syntax errors.</div>
+      </div>
+      <div class="card" style="background:linear-gradient(135deg,#EEF2FF,#fff)">
+        <div class="label" style="color:var(--indigo)">LOOKING UP WCAG</div>
+        <div style="font-size:14.5px;font-weight:800;color:var(--navy);margin-top:6px">Criteria numbers, names, techniques</div>
+        <div class="desc">All 88 WCAG 2.2 A+AA criteria are in the training data. The LLM doesn't need to "remember" — it pattern-matches.</div>
+      </div>
+      <div class="card" style="background:linear-gradient(135deg,#F5F3FF,#fff)">
+        <div class="label" style="color:#5B21B6">WRITING REPORTS</div>
+        <div style="font-size:14.5px;font-weight:800;color:var(--navy);margin-top:6px">Defects, fixes, test cases</div>
+        <div class="desc">Structured text generation with consistent format is what LLMs literally exist to do.</div>
+      </div>
+    </div>
+
+    <div class="tip-block" style="margin-top:18px"><b>The catch:</b> the LLM will sometimes be confidently wrong. Your job is to use it for speed — and verify everything before it leaves your hands. We'll cover verification at the end.</div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>3 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 4: A11YNEXUS GLIMPSE ========================= -->
+<section class="slide dark">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Briefly — what this looks like at scale</div></div>
+    <h2 class="title" style="color:#fff">A11yNexus does this <span style="background:linear-gradient(90deg,#34D399,#06B6D4,#a5b4fc);-webkit-background-clip:text;background-clip:text;color:transparent">at platform scale</span> — you'll learn the building blocks today</h2>
+    <h3 class="subtle">A11yNexus is the internal platform our team built. It runs the same techniques you'll learn today — just wrapped in a UI, hooked to a knowledge graph, and orchestrated across thousands of audits.</h3>
+
+    <div class="grid g3" style="margin-top:20px;flex:1">
+      <div class="card glass">
+        <div class="label">AT PLATFORM SCALE</div>
+        <div style="font-size:14.5px;font-weight:800;color:#fff;margin-top:6px">A11yNexus</div>
+        <div class="desc">UI · job queue · knowledge graph · multi-tenant · scheduled audits · &lt; 1 min per page</div>
+      </div>
+      <div class="card glass" style="background:linear-gradient(90deg,rgba(16,185,129,.1),rgba(79,70,229,.1));border-color:rgba(165,180,252,.3);display:flex;align-items:center;justify-content:center">
+        <div style="text-align:center">
+          <div style="font-size:30px;font-weight:800;color:#a5b4fc;letter-spacing:-.02em">→</div>
+          <div style="font-size:11px;color:#a5b4fc;font-weight:700;letter-spacing:.1em;margin-top:6px">SAME UNDERLYING TECHNIQUES</div>
+        </div>
+      </div>
+      <div class="card glass">
+        <div class="label">AT YOUR DESK TODAY</div>
+        <div style="font-size:14.5px;font-weight:800;color:#fff;margin-top:6px">ChatGPT · Claude · Gemini</div>
+        <div class="desc">Open a chat tab · paste a prompt · audit a snippet · file a defect · write a test. No infrastructure needed.</div>
+      </div>
+    </div>
+
+    <div class="tip-block" style="margin-top:16px;background:rgba(165,180,252,.1);border-color:rgba(165,180,252,.2)"><b style="color:#fff">The point:</b> you don't need to wait for a platform to start using AI in your daily a11y work. You can start tonight, with a chat tab and the right prompts. That's what the rest of this session teaches.</div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>4 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 5: YOUR TOOLKIT ========================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Setup · 30 seconds</div></div>
+    <h2 class="title">Your toolkit for this session</h2>
+    <h3 class="subtle">Three options, any one works. Pick whatever you already have access to.</h3>
+
+    <div class="grid g3" style="margin-top:20px;flex:1">
+      <div class="card" style="background:linear-gradient(180deg,#fff,#F8FAFC)">
+        <div class="pill green">RECOMMENDED</div>
+        <div style="font-size:16px;font-weight:800;color:var(--navy);margin-top:10px">Claude.ai</div>
+        <div class="desc" style="margin-top:6px">Strong at long code analysis · handles HTML/JS files well · free tier is enough for the SBA · use Projects to keep WCAG context handy.</div>
+      </div>
+      <div class="card" style="background:linear-gradient(180deg,#fff,#F8FAFC)">
+        <div class="pill">WIDELY USED</div>
+        <div style="font-size:16px;font-weight:800;color:var(--navy);margin-top:10px">ChatGPT</div>
+        <div class="desc" style="margin-top:6px">Reliable for most a11y prompts · Custom GPTs let you save your prompt templates · GPT-4 tier recommended.</div>
+      </div>
+      <div class="card" style="background:linear-gradient(180deg,#fff,#F8FAFC)">
+        <div class="pill gray">ALSO FINE</div>
+        <div style="font-size:16px;font-weight:800;color:var(--navy);margin-top:10px">Gemini</div>
+        <div class="desc" style="margin-top:6px">Free tier available · solid for code-level prompts · Gems are similar to Custom GPTs for saving templates.</div>
+      </div>
+    </div>
+
+    <div class="grid g2" style="margin-top:14px;gap:12px">
+      <div class="anat-box b1">
+        <div class="at">YOU ALSO NEED</div>
+        <h5>Some HTML to test against</h5>
+        <p>The cheatsheet has sample snippets to practice on. Or grab a real page from a client project (with permission).</p>
+      </div>
+      <div class="anat-box b2">
+        <div class="at">OPTIONAL BUT HELPFUL</div>
+        <h5>A code editor (VS Code) for the Playwright module</h5>
+        <p>For Module 3 (test scripts) you'll want to actually run what the AI generates. Any editor works.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>5 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 6: ANATOMY OF A GOOD PROMPT ========================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Foundation · The prompt pattern</div></div>
+    <h2 class="title">Every good a11y prompt has <span style="background:linear-gradient(90deg,#10B981,#06B6D4);-webkit-background-clip:text;background-clip:text;color:transparent">five parts</span></h2>
+    <h3 class="subtle">Learn this pattern once. Every prompt in this session is a variation on it.</h3>
+
+    <div class="grid g2" style="margin-top:18px;flex:1;gap:12px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="anat-box b1">
+          <div class="at">1 · ROLE</div>
+          <h5>Tell it who to be</h5>
+          <p>"You are a senior accessibility engineer with deep WCAG 2.2 expertise." Frames the entire response.</p>
+        </div>
+        <div class="anat-box b2">
+          <div class="at">2 · CONTEXT</div>
+          <h5>Give it the WCAG criteria it should care about</h5>
+          <p>Pasting relevant WCAG criteria text into the prompt = simulated RAG. Grounds the answer in real standards.</p>
+        </div>
+        <div class="anat-box b3">
+          <div class="at">3 · TASK</div>
+          <h5>State what you want done</h5>
+          <p>"Audit this HTML and identify violations." One clear ask. Avoid mixing multiple tasks in one prompt.</p>
+        </div>
+        <div class="anat-box b4">
+          <div class="at">4 · FORMAT</div>
+          <h5>Specify the output structure</h5>
+          <p>"For each issue: WCAG criterion, element, user impact, fix, severity." Structured output is parseable output.</p>
+        </div>
+        <div class="anat-box b5">
+          <div class="at">5 · CONSTRAINTS</div>
+          <h5>Tell it what NOT to do</h5>
+          <p>"Don't give generic advice. Prefer semantic HTML over ARIA. Cite the exact WCAG criterion number."</p>
+        </div>
+      </div>
+      <div class="prompt-card">
+        <span class="pc-tag">EXAMPLE</span>
+        <span class="pc-copy">COPY-READY</span>
+<span class="hl">[ROLE]</span>
+You are a senior accessibility engineer
+with deep WCAG 2.2 expertise.
+
+<span class="hl-g">[CONTEXT]</span>
+Most likely criteria for forms:
+- 1.3.1 Info and Relationships
+- 1.4.3 Contrast (Minimum)
+- 2.4.6 Headings and Labels
+- 3.3.2 Labels or Instructions
+- 4.1.2 Name, Role, Value
+
+<span class="hl-a">[TASK]</span>
+Audit the HTML below for WCAG 2.2
+Level A and AA violations.
+
+<span class="hl">[FORMAT]</span>
+For each issue produce:
+- WCAG criterion (number + name)
+- Element (CSS selector or HTML)
+- User impact
+- Recommended fix with code
+- Severity: Critical/Major/Minor
+
+<span class="hl-a">[CONSTRAINTS]</span>
+Prefer semantic HTML over ARIA.
+Don't give generic advice.
+Group issues by WCAG criterion.
+
+<span class="cmt">--- HTML ---</span>
+&lt;paste HTML here&gt;
+      </div>
+    </div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>6 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 7: SIMULATED RAG ========================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Foundation · Grounding the AI</div></div>
+    <h2 class="title">Simulated RAG: <span style="background:linear-gradient(90deg,#10B981,#06B6D4);-webkit-background-clip:text;background-clip:text;color:transparent">paste the standard into the prompt</span></h2>
+    <h3 class="subtle">You don't need a knowledge base server. You can ground the AI by pasting the relevant WCAG criteria directly into your prompt. This dramatically reduces hallucinations.</h3>
+
+    <div class="grid g2" style="margin-top:18px;flex:1;gap:14px;align-items:start">
+      <div>
+        <div class="pill green" style="margin-bottom:10px">WHY IT WORKS</div>
+        <div class="bullets">
+          <div class="b-row"><div class="ic">★</div><div><b>LLMs trust their context window over their training data.</b> Paste the criterion text, and the model will cite it accurately.</div></div>
+          <div class="b-row"><div class="ic">★</div><div><b>It fixes the wrong-WCAG-number problem.</b> Without context, LLMs sometimes invent criterion numbers. With context, they don't.</div></div>
+          <div class="b-row"><div class="ic">★</div><div><b>It works on free tiers.</b> No paid tools, no plugins, no APIs. Just paste.</div></div>
+          <div class="b-row"><div class="ic">★</div><div><b>It scales to your project.</b> Add your client's design system tokens, custom rules, brand glossary — all as pasted context.</div></div>
+        </div>
+
+        <div class="tip-block" style="margin-top:14px"><b>Pro tip:</b> Save a "WCAG context block" in your notes app. Paste it at the top of every a11y prompt. Two minutes once, every prompt better forever.</div>
+      </div>
+
+      <div class="prompt-card compact">
+        <span class="pc-tag">SAVE THIS BLOCK</span>
+<span class="hl-g">REFERENCE — WCAG 2.2 A &amp; AA (core):</span>
+
+<span class="hl">Perceivable</span>
+1.1.1 Non-text Content — Provide text alternatives.
+1.3.1 Info and Relationships — Structure programmatically determinable.
+1.3.5 Identify Input Purpose — autocomplete attributes.
+1.4.3 Contrast (Minimum) — 4.5:1 text, 3:1 large.
+1.4.10 Reflow — No 2D scroll at 320px.
+1.4.11 Non-text Contrast — 3:1 for UI components.
+
+<span class="hl">Operable</span>
+2.1.1 Keyboard — All functionality keyboard-accessible.
+2.1.2 No Keyboard Trap — Focus can leave any element.
+2.4.3 Focus Order — Logical sequence.
+2.4.6 Headings and Labels — Describe topic/purpose.
+2.4.7 Focus Visible — Visible focus indicator.
+2.5.3 Label in Name — Visible label matches accessible name.
+
+<span class="hl">Understandable</span>
+3.2.1 On Focus — No context change on focus.
+3.2.2 On Input — No context change on input.
+3.3.1 Error Identification — Errors described in text.
+3.3.2 Labels or Instructions — Provided for input.
+
+<span class="hl">Robust</span>
+4.1.2 Name, Role, Value — All UI components.
+4.1.3 Status Messages — Programmatically determinable.
+      </div>
+    </div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>7 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 8: MODULE 1 INTRO ========================= -->
+<section class="slide dark">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Module 1 of 3</div></div>
+    <div class="lab-marker" style="margin-top:8px;width:fit-content">LAB 1 · AUDIT &amp; DEFECT REPORTS</div>
+    <h2 class="title" style="color:#fff;margin-top:14px">Audit raw HTML, then turn findings into <span style="background:linear-gradient(90deg,#34D399,#06B6D4,#a5b4fc);-webkit-background-clip:text;background-clip:text;color:transparent">JIRA-ready defects</span></h2>
+    <h3 class="subtle">Two prompts working together: one finds the issues, the second writes them up as tickets your team can actually file.</h3>
+
+    <div class="grid g2" style="margin-top:24px;flex:1;align-items:start">
+      <div class="card glass">
+        <div class="label" style="color:#34D399">PROMPT 1 — AUDIT</div>
+        <div style="font-size:16px;font-weight:800;color:#fff;margin-top:8px">Find what's broken</div>
+        <p style="font-size:12.5px;color:#cbd5e1;margin-top:8px;line-height:1.55">Input: an HTML snippet. Output: a structured list of WCAG violations, grouped by criterion, with severity and a suggested fix for each.</p>
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+          <span class="pill green">finds violations</span>
+          <span class="pill green">groups by WCAG</span>
+          <span class="pill green">ranks severity</span>
+        </div>
+      </div>
+      <div class="card glass">
+        <div class="label" style="color:#a5b4fc">PROMPT 2 — DEFECT WRITE-UP</div>
+        <div style="font-size:16px;font-weight:800;color:#fff;margin-top:8px">Convert to filable tickets</div>
+        <p style="font-size:12.5px;color:#cbd5e1;margin-top:8px;line-height:1.55">Input: prompt 1's output (or raw axe-core findings). Output: complete JIRA-format defect tickets — title, priority, steps, WCAG ref, expected/actual, fix.</p>
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+          <span class="pill dark">JIRA format</span>
+          <span class="pill dark">priority field</span>
+          <span class="pill dark">tested build link</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-block" style="margin-top:14px;background:rgba(165,180,252,.08);border-color:rgba(165,180,252,.2)"><b style="color:#fff">Why two prompts, not one?</b> Each prompt does one job well. Trying to audit and write defects in a single mega-prompt produces mushier output. Chain them instead — the audit feeds the writer.</div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>8 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 9: MODULE 1 PROMPT 1 ========================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Lab 1 · Prompt 1 of 2</div></div>
+    <h2 class="title">Prompt: <span style="background:linear-gradient(90deg,#10B981,#06B6D4);-webkit-background-clip:text;background-clip:text;color:transparent">Audit HTML for WCAG 2.2 violations</span></h2>
+    <h3 class="subtle">Copy this into ChatGPT/Claude/Gemini. Paste your HTML where indicated. Run.</h3>
+
+    <div class="prompt-card" style="margin-top:14px;flex:1">
+      <span class="pc-tag">PROMPT 1 · AUDIT</span>
+      <span class="pc-copy">COPY ME</span>
+<span class="hl">You are a senior accessibility engineer</span> with deep WCAG 2.2 expertise.
+
+<span class="hl-g">REFERENCE — WCAG 2.2 A &amp; AA criteria most likely to apply:</span>
+1.1.1 Non-text Content · 1.3.1 Info and Relationships · 1.4.3 Contrast
+2.1.1 Keyboard · 2.4.6 Headings and Labels · 2.4.7 Focus Visible
+3.3.1 Error Identification · 3.3.2 Labels or Instructions
+4.1.2 Name, Role, Value · 4.1.3 Status Messages
+<span class="cmt">(Paste full WCAG context block for best results)</span>
+
+<span class="hl-a">TASK:</span> Audit the HTML below against WCAG 2.2 Level A and AA. Find every violation — including any not in the reference list above.
+
+<span class="hl">FORMAT — for each violation:</span>
+1. <span class="hl-a">Issue Title</span> — one line, descriptive
+2. <span class="hl-a">WCAG Criterion</span> — number + name + level
+3. <span class="hl-a">Affected Element</span> — CSS selector or HTML snippet
+4. <span class="hl-a">User Impact</span> — screen reader / keyboard / low-vision
+5. <span class="hl-a">Recommended Fix</span> — corrected code, not description
+6. <span class="hl-a">Severity</span> — Critical / Major / Minor
+
+<span class="hl-a">CONSTRAINTS:</span>
+- Group by WCAG criterion
+- Prefer semantic HTML over ARIA (First Rule of ARIA)
+- Be specific to this snippet — no generic advice
+- Flag unsure cases as "needs manual verification"
+
+<span class="cmt">--- HTML ---</span>
+&lt;paste your HTML snippet here&gt;
+    </div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>9 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 10: MODULE 1 EXAMPLE RUN ========================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Lab 1 · What you should see</div></div>
+    <h2 class="title">Sample run — input and output</h2>
+    <h3 class="subtle">A broken form snippet, what the LLM returns. Try this exact example yourself before moving on.</h3>
+
+    <div class="grid g2" style="margin-top:14px;flex:1;gap:14px;align-items:start">
+      <div>
+        <div class="pill" style="margin-bottom:8px">INPUT HTML</div>
+        <div class="prompt-card compact" style="font-size:10px">
+<span class="cmt">&lt;!-- Broken signup form snippet --&gt;</span>
+&lt;<span class="hl">div</span> <span class="hl-a">class</span>=<span class="hl-g">"form"</span>&gt;
+  &lt;<span class="hl">div</span> <span class="hl-a">class</span>=<span class="hl-g">"heading"</span>&gt;Sign up for our newsletter&lt;/<span class="hl">div</span>&gt;
+  &lt;<span class="hl">input</span> <span class="hl-a">type</span>=<span class="hl-g">"text"</span> <span class="hl-a">placeholder</span>=<span class="hl-g">"Your email"</span>&gt;
+  &lt;<span class="hl">input</span> <span class="hl-a">type</span>=<span class="hl-g">"text"</span> <span class="hl-a">placeholder</span>=<span class="hl-g">"Your name"</span>&gt;
+  &lt;<span class="hl">div</span> <span class="hl-a">onclick</span>=<span class="hl-g">"submit()"</span> <span class="hl-a">style</span>=<span class="hl-g">"color:#999;background:#eee"</span>&gt;
+    Subscribe
+  &lt;/<span class="hl">div</span>&gt;
+  &lt;<span class="hl">img</span> <span class="hl-a">src</span>=<span class="hl-g">"badge.png"</span>&gt;
+&lt;/<span class="hl">div</span>&gt;
+        </div>
+      </div>
+      <div>
+        <div class="pill green" style="margin-bottom:8px">EXPECTED OUTPUT (excerpt)</div>
+        <div class="mock-output" style="font-size:10px">
+<div class="mo-h">VIOLATIONS FOUND: 5</div>
+<b>Issue 1 — Form inputs lack labels</b>
+WCAG: <span class="gd">1.3.1 Info and Relationships — A</span>
+<span class="gd">3.3.2 Labels or Instructions — A</span>
+Element: <span class="br">&lt;input type="text" placeholder="Your email"&gt;</span>
+Impact: Screen reader users hear "edit text" with no field purpose.
+Fix: Replace placeholder-as-label with explicit &lt;label&gt;.
+Severity: <span class="br">Critical</span>
+
+<b>Issue 2 — Heading uses div, not h1-h6</b>
+WCAG: <span class="gd">1.3.1 Info and Relationships — A</span>
+Element: <span class="br">&lt;div class="heading"&gt;</span>
+Fix: Use &lt;h2&gt; for section heading.
+Severity: <span class="br">Major</span>
+
+<b>Issue 3 — Submit button not keyboard accessible</b>
+WCAG: <span class="gd">2.1.1 Keyboard — A · 4.1.2 Name, Role, Value — A</span>
+Element: <span class="br">&lt;div onclick="submit()"&gt;</span>
+Fix: Use &lt;button type="submit"&gt;.
+Severity: <span class="br">Critical</span>
+
+<b>Issue 4 — Insufficient contrast</b>
+WCAG: <span class="gd">1.4.3 Contrast — AA</span>
+...
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-block" style="margin-top:12px"><b>Try this now:</b> open the cheatsheet, copy the prompt and this HTML, paste into your AI of choice. You should get 5+ violations. If you get fewer than 4, your prompt is missing the WCAG context block — add it.</div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>10 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 11: MODULE 1 PROMPT 2 - DEFECT WRITE-UP ========================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Lab 1 · Prompt 2 of 2</div></div>
+    <h2 class="title">Prompt: <span style="background:linear-gradient(90deg,#10B981,#06B6D4);-webkit-background-clip:text;background-clip:text;color:transparent">Convert findings to JIRA-ready defects</span></h2>
+    <h3 class="subtle">Feed prompt 1's output (or raw axe output) into this. Out comes a clean defect ticket per issue.</h3>
+
+    <div class="grid g2" style="margin-top:14px;flex:1;gap:14px;align-items:start">
+      <div class="prompt-card" style="font-size:10.5px">
+        <span class="pc-tag">PROMPT 2 · DEFECT WRITER</span>
+<span class="hl">You are a senior accessibility engineer</span> writing JIRA-ready defect tickets for an Albertsons-style enterprise client.
+
+<span class="hl-a">TASK:</span> Convert each accessibility violation below into a complete defect ticket using the format below.
+
+<span class="hl-g">REQUIRED FORMAT (use exactly):</span>
+<span class="hl-a">Title:</span> [concise, descriptive — what's broken]
+<span class="hl-a">Priority:</span> [P1-Critical / P2-High / P3-Medium]
+<span class="hl-a">WCAG Criterion:</span> [number + name + level]
+<span class="hl-a">Tested Build Version:</span> {{BUILD_LINK}}
+<span class="hl-a">Affected Page/Component:</span> [where it occurs]
+<span class="hl-a">Steps to Reproduce:</span>
+  1. [step]
+  2. [step]
+  3. [step]
+<span class="hl-a">Expected Result:</span> [what should happen]
+<span class="hl-a">Actual Result:</span> [what happens now]
+<span class="hl-a">User Impact:</span> [who's affected, how]
+<span class="hl-a">Suggested Fix:</span> [code-level if applicable]
+<span class="hl-a">Screenshot Required:</span> Yes/No
+
+<span class="hl-a">CONSTRAINTS:</span>
+- Always include Priority (never skip)
+- Always use the full {{BUILD_LINK}} placeholder
+- One ticket per violation (don't combine)
+- Group similar violations only if root cause is identical
+
+<span class="cmt">--- VIOLATIONS ---</span>
+&lt;paste prompt 1 output OR raw axe-core JSON here&gt;
+      </div>
+      <div>
+        <div class="pill" style="margin-bottom:10px">WHY THIS FORMAT</div>
+        <div class="bullets">
+          <div class="b-row"><div class="ic">★</div><div><b>Priority is mandatory</b> in our team's standard. The prompt enforces it.</div></div>
+          <div class="b-row"><div class="ic">★</div><div><b>Tested Build Version</b> uses a placeholder you replace per audit — full Bitrise URL, not just a build number.</div></div>
+          <div class="b-row"><div class="ic">★</div><div><b>Steps to reproduce</b> as numbered list — JIRA renders this cleanly.</div></div>
+          <div class="b-row"><div class="ic">★</div><div><b>Suggested fix as code</b> — saves the developer's time, makes the ticket actionable.</div></div>
+          <div class="b-row"><div class="ic">★</div><div><b>One ticket per violation</b> — easier to triage, assign, close.</div></div>
+        </div>
+
+        <div class="tip-block" style="margin-top:14px"><b>SBA tip:</b> The format above matches what the Albertsons account team uses. If your SBA asks for "JIRA-ready defects" — this is the structure they're looking for.</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>11 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 12: MODULE 2 INTRO ========================= -->
+<section class="slide dark">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Module 2 of 3</div></div>
+    <div class="lab-marker l2" style="margin-top:8px;width:fit-content">LAB 2 · GENERATE FIXES</div>
+    <h2 class="title" style="color:#fff;margin-top:14px">Get the AI to <span style="background:linear-gradient(90deg,#34D399,#06B6D4,#a5b4fc);-webkit-background-clip:text;background-clip:text;color:transparent">write the fix</span>, not just describe it</h2>
+    <h3 class="subtle">The difference between "this needs an aria-label" and "here's the corrected component, ready to paste." One ticket gets fixed faster than the other.</h3>
+
+    <div class="prompt-card" style="margin-top:18px;flex:1">
+      <span class="pc-tag">PROMPT · ARIA/HTML FIX GENERATOR</span>
+      <span class="pc-copy">COPY ME</span>
+<span class="hl">You are a senior frontend accessibility engineer.</span> I will paste an HTML/JSX snippet with accessibility issues. Your job:
+
+<span class="hl-a">TASK:</span>
+1. Identify what's wrong (cite the WCAG criterion)
+2. Output the <span class="hl">fixed</span> HTML/JSX — full snippet, ready to paste
+3. Explain why your fix works (1-2 sentences max)
+4. If you added ARIA, justify why native HTML wasn't sufficient
+
+<span class="hl-a">CONSTRAINTS — First Rule of ARIA applies:</span>
+- Prefer semantic HTML over ARIA every time
+- No ARIA &gt; bad ARIA
+- Don't introduce new accessibility issues
+- Preserve the visual design — change semantics only
+- Keep the same framework (HTML stays HTML, JSX stays JSX)
+- Don't add features that weren't there before
+
+<span class="hl-g">OUTPUT FORMAT:</span>
+## Issue
+[what's broken + WCAG ref]
+
+## Fixed Code
+```html
+&lt;corrected snippet&gt;
+```
+
+## Why this works
+[1-2 sentences]
+
+## ARIA justification (if used)
+[why native HTML wasn't enough]
+
+<span class="cmt">--- BROKEN SNIPPET ---</span>
+&lt;paste broken HTML/JSX here&gt;
+    </div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>12 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 13: MODULE 2 EXAMPLE ========================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Lab 2 · Example walkthrough</div></div>
+    <h2 class="title">Before and after — a real custom dropdown</h2>
+    <h3 class="subtle">Common pattern: a "div soup" dropdown built without semantic elements. Watch the AI transform it.</h3>
+
+    <div class="grid g2" style="margin-top:14px;flex:1;gap:14px;align-items:start">
+      <div>
+        <div class="pill rose" style="margin-bottom:8px">BEFORE — BROKEN</div>
+        <div class="prompt-card compact" style="font-size:9.5px">
+&lt;<span class="hl">div</span> <span class="hl-a">class</span>=<span class="hl-g">"dropdown"</span>&gt;
+  &lt;<span class="hl">div</span> <span class="hl-a">class</span>=<span class="hl-g">"trigger"</span> <span class="hl-a">onclick</span>=<span class="hl-g">"toggle()"</span>&gt;
+    Select country
+  &lt;/<span class="hl">div</span>&gt;
+  &lt;<span class="hl">div</span> <span class="hl-a">class</span>=<span class="hl-g">"options"</span> <span class="hl-a">style</span>=<span class="hl-g">"display:none"</span>&gt;
+    &lt;<span class="hl">div</span> <span class="hl-a">onclick</span>=<span class="hl-g">"pick('IN')"</span>&gt;India&lt;/<span class="hl">div</span>&gt;
+    &lt;<span class="hl">div</span> <span class="hl-a">onclick</span>=<span class="hl-g">"pick('US')"</span>&gt;USA&lt;/<span class="hl">div</span>&gt;
+    &lt;<span class="hl">div</span> <span class="hl-a">onclick</span>=<span class="hl-g">"pick('UK')"</span>&gt;UK&lt;/<span class="hl">div</span>&gt;
+  &lt;/<span class="hl">div</span>&gt;
+&lt;/<span class="hl">div</span>&gt;
+        </div>
+        <div class="pitfall-block" style="margin-top:10px"><b>Issues:</b> Not keyboard accessible · No role/name · No focus management · Screen reader sees text but no widget semantics.</div>
+      </div>
+      <div>
+        <div class="pill green" style="margin-bottom:8px">AFTER — AI FIX (excerpt)</div>
+        <div class="prompt-card compact" style="font-size:9.5px;background:linear-gradient(135deg,#064e3b,#065f46)">
+<span class="cmt">&lt;!-- Option A: Native &lt;select&gt; (preferred) --&gt;</span>
+&lt;<span class="hl-g">label</span> <span class="hl-a">for</span>=<span class="hl-g">"country"</span>&gt;Country&lt;/<span class="hl-g">label</span>&gt;
+&lt;<span class="hl-g">select</span> <span class="hl-a">id</span>=<span class="hl-g">"country"</span> <span class="hl-a">name</span>=<span class="hl-g">"country"</span>&gt;
+  &lt;<span class="hl-g">option</span> <span class="hl-a">value</span>=<span class="hl-g">""</span>&gt;Select country&lt;/<span class="hl-g">option</span>&gt;
+  &lt;<span class="hl-g">option</span> <span class="hl-a">value</span>=<span class="hl-g">"IN"</span>&gt;India&lt;/<span class="hl-g">option</span>&gt;
+  &lt;<span class="hl-g">option</span> <span class="hl-a">value</span>=<span class="hl-g">"US"</span>&gt;USA&lt;/<span class="hl-g">option</span>&gt;
+  &lt;<span class="hl-g">option</span> <span class="hl-a">value</span>=<span class="hl-g">"UK"</span>&gt;UK&lt;/<span class="hl-g">option</span>&gt;
+&lt;/<span class="hl-g">select</span>&gt;
+
+<span class="cmt">&lt;!-- If custom dropdown is required, use --&gt;</span>
+<span class="cmt">&lt;!-- WAI-ARIA Combobox pattern with proper --&gt;</span>
+<span class="cmt">&lt;!-- role, aria-expanded, aria-controls, keyboard --&gt;</span>
+        </div>
+        <div class="tip-block" style="margin-top:10px"><b>Notice:</b> The AI proposed the simpler native solution first. That's First Rule of ARIA in action — your prompt constraint pushed it there.</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>13 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 14: MODULE 3 INTRO ========================= -->
+<section class="slide dark">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Module 3 of 3</div></div>
+    <div class="lab-marker l3" style="margin-top:8px;width:fit-content">LAB 3 · PLAYWRIGHT + AXE-CORE</div>
+    <h2 class="title" style="color:#fff;margin-top:14px">Generate <span style="background:linear-gradient(90deg,#34D399,#06B6D4,#a5b4fc);-webkit-background-clip:text;background-clip:text;color:transparent">runnable test scripts</span> with a single prompt</h2>
+    <h3 class="subtle">This is the most powerful technique in this session. You go from "I should automate a11y testing" to "I have a working test script" in about three minutes.</h3>
+
+    <div class="grid g3" style="margin-top:22px;flex:1">
+      <div class="card glass">
+        <div class="label" style="color:#34D399">PROMPT 1</div>
+        <div style="font-size:14.5px;font-weight:800;color:#fff;margin-top:6px">Base script</div>
+        <p style="font-size:12px;color:#cbd5e1;margin-top:6px;line-height:1.5">Generate a working Playwright + axe-core test that scans a URL and logs all WCAG 2.2 A/AA violations.</p>
+      </div>
+      <div class="card glass">
+        <div class="label" style="color:#a5b4fc">PROMPT 2</div>
+        <div style="font-size:14.5px;font-weight:800;color:#fff;margin-top:6px">Filter by WCAG criteria</div>
+        <p style="font-size:12px;color:#cbd5e1;margin-top:6px;line-height:1.5">Extend the script to only run rules tagged with specific criteria — useful for focused regression tests.</p>
+      </div>
+      <div class="card glass">
+        <div class="label" style="color:#c4b5fd">PROMPT 3</div>
+        <div style="font-size:14.5px;font-weight:800;color:#fff;margin-top:6px">Generate custom rule</div>
+        <p style="font-size:12px;color:#cbd5e1;margin-top:6px;line-height:1.5">Write a brand-new axe-core rule for client-specific patterns (e.g., "every icon button needs aria-label").</p>
+      </div>
+    </div>
+
+    <div class="tip-block" style="margin-top:16px;background:rgba(165,180,252,.1);border-color:rgba(165,180,252,.25)"><b style="color:#fff">Stack you'll need:</b> Node.js + npm · VS Code · then <code style="background:rgba(0,0,0,.3);padding:1px 6px;border-radius:4px;color:#a5b4fc;font-family:monospace">npm install -D @playwright/test @axe-core/playwright</code>. The cheatsheet has the full setup commands.</div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>14 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 15: MODULE 3 PROMPT 1 BASE SCRIPT ========================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Lab 3 · Prompt 1 of 3</div></div>
+    <h2 class="title">Prompt: <span style="background:linear-gradient(90deg,#10B981,#06B6D4);-webkit-background-clip:text;background-clip:text;color:transparent">Base Playwright + axe-core test</span></h2>
+    <h3 class="subtle">One prompt → a runnable test script for any URL. Replace the placeholders, save as a .spec.ts, run with <code style="background:#F1F5F9;padding:1px 6px;border-radius:4px;font-family:monospace;font-size:13px">npx playwright test</code>.</h3>
+
+    <div class="prompt-card" style="margin-top:14px;flex:1">
+      <span class="pc-tag">PROMPT · BASE TEST SCRIPT</span>
+      <span class="pc-copy">COPY ME</span>
+<span class="hl">You are a senior QA automation engineer</span> specializing in accessibility testing with Playwright and axe-core.
+
+<span class="hl-a">TASK:</span> Write a complete, runnable Playwright test file (TypeScript) that:
+1. Navigates to a given URL
+2. Waits for the page to be fully loaded (networkidle)
+3. Runs axe-core analysis against WCAG 2.2 Level A and AA
+4. Fails the test if any violations are found
+5. Logs each violation: id, impact, description, affected nodes (with selectors), help URL
+6. Saves the full report as JSON to <span class="hl-g">./reports/{page-name}-a11y-{timestamp}.json</span>
+
+<span class="hl-a">REQUIREMENTS:</span>
+- Use <span class="hl-g">@axe-core/playwright</span> AxeBuilder
+- TypeScript with proper types
+- Include necessary imports
+- Brief comment block at top: purpose, how to run, dependencies
+- Use <span class="hl-g">withTags()</span> with: wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22a, wcag22aa
+- Group output by impact level (critical → minor)
+- Make selectors copyable
+
+<span class="hl-g">INPUTS:</span>
+- URL to test: <span class="hl-a">{{URL}}</span>
+- Page name for the report: <span class="hl-a">{{PAGE_NAME}}</span>
+
+Output: the complete .spec.ts file. No commentary outside the code block.
+    </div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>15 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 16: MODULE 3 PROMPT 2 - WCAG FILTER ========================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Lab 3 · Prompt 2 of 3</div></div>
+    <h2 class="title">Prompt: <span style="background:linear-gradient(90deg,#10B981,#06B6D4);-webkit-background-clip:text;background-clip:text;color:transparent">Filter by specific WCAG criteria</span></h2>
+    <h3 class="subtle">When you're regression-testing a fix, you only need to verify the specific criteria that were broken. This prompt narrows the run.</h3>
+
+    <div class="grid g2" style="margin-top:14px;flex:1;gap:14px;align-items:start">
+      <div class="prompt-card" style="font-size:10.5px">
+        <span class="pc-tag">PROMPT · FILTERED TEST</span>
+<span class="hl">You are a senior QA automation engineer.</span>
+
+<span class="hl-a">TASK:</span> Extend the Playwright + axe-core test below to run ONLY the rules tagged with specific WCAG criteria. Keep all other behavior the same (logging, report file, fail-on-violation).
+
+<span class="hl-a">CRITERIA TO TEST:</span>
+<span class="hl-g">{{CRITERIA_LIST}}</span>
+<span class="cmt">Example: ["wcag143", "wcag246", "wcag412"]</span>
+<span class="cmt">Format follows axe-core tag naming.</span>
+
+<span class="hl-a">CONSTRAINTS:</span>
+- Use <span class="hl-g">withTags()</span> with the exact criterion tags
+- Don't drop the impact-level grouping in output
+- Add a clear comment at the top stating which criteria this test covers
+- If a criterion has no matching axe rule, log a note: <span class="hl-g">"No automated rule for X.X.X — needs manual verification"</span>
+
+<span class="cmt">--- EXISTING TEST SCRIPT ---</span>
+&lt;paste the base script from Prompt 1 here&gt;
+      </div>
+      <div>
+        <div class="pill" style="margin-bottom:10px">WHEN TO USE</div>
+        <div class="bullets">
+          <div class="b-row"><div class="ic">★</div><div><b>Regression after a fix.</b> Developer claims defect ABC-123 is fixed (WCAG 1.4.3). Run this with just <code style="background:#F1F5F9;padding:1px 5px;border-radius:4px;font-size:11px">wcag143</code> to verify.</div></div>
+          <div class="b-row"><div class="ic">★</div><div><b>Focused sprint testing.</b> Sprint goal is "fix all color contrast issues" — run this with just contrast tags across the affected pages.</div></div>
+          <div class="b-row"><div class="ic">★</div><div><b>SBA scenario.</b> You'll likely be asked to demonstrate this — generating a focused regression test for a specific fix.</div></div>
+        </div>
+
+        <div class="tip-block" style="margin-top:14px"><b>axe-core tag reference:</b> The criterion number with no dots, prefixed with <code style="background:#F1F5F9;padding:1px 5px;border-radius:4px;font-size:11px">wcag</code>. So <code style="background:#F1F5F9;padding:1px 5px;border-radius:4px;font-size:11px">1.4.3</code> becomes <code style="background:#F1F5F9;padding:1px 5px;border-radius:4px;font-size:11px">wcag143</code>. The cheatsheet has the full tag list.</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>16 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 17: MODULE 3 PROMPT 3 - CUSTOM RULE ========================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Lab 3 · Prompt 3 of 3</div></div>
+    <h2 class="title">Prompt: <span style="background:linear-gradient(90deg,#10B981,#06B6D4);-webkit-background-clip:text;background-clip:text;color:transparent">Generate a custom axe-core rule</span></h2>
+    <h3 class="subtle">When axe doesn't have a rule for your client's pattern — write one. With an LLM, this goes from "two-day engineering task" to "fifteen minutes."</h3>
+
+    <div class="prompt-card" style="margin-top:14px;flex:1">
+      <span class="pc-tag">PROMPT · CUSTOM AXE RULE</span>
+      <span class="pc-copy">COPY ME</span>
+<span class="hl">You are an accessibility test engineer</span> writing a custom rule for axe-core to extend its default checks.
+
+<span class="hl-a">RULE TO IMPLEMENT:</span>
+<span class="hl-g">{{RULE_DESCRIPTION}}</span>
+<span class="cmt">Example: "Every &lt;button&gt; with only an icon (no visible text)</span>
+<span class="cmt">must have aria-label or aria-labelledby. Buttons with both</span>
+<span class="cmt">visible text AND an icon are exempt."</span>
+
+<span class="hl-a">DELIVERABLES:</span>
+1. The <span class="hl-g">check function</span> (vanilla JS, runs in browser context)
+2. The <span class="hl-g">rule definition</span> in axe-core's <span class="hl-g">configure()</span> format
+3. A short HTML <span class="hl-g">test snippet</span> that WOULD trigger this rule
+4. A short HTML test snippet that WOULD NOT trigger it (negative)
+5. <span class="hl-g">Playwright registration code</span> showing how to load the rule before <span class="hl-g">analyze()</span>
+
+<span class="hl-a">CONSTRAINTS:</span>
+- Tag the rule with the matching WCAG criterion (e.g., <span class="hl-g">"wcag412"</span>)
+- Provide <span class="hl-g">help</span> and <span class="hl-g">helpUrl</span> pointing to WCAG docs
+- Use a unique rule ID with client prefix (e.g., <span class="hl-g">"acb-icon-button-name"</span>)
+- Severity: critical / serious / moderate / minor — pick appropriately
+- Output as four clearly labeled code blocks
+
+Output: just the code. No explanatory prose between blocks.
+    </div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>17 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 18: PITFALLS ========================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">Important · Things AI gets wrong</div></div>
+    <h2 class="title">Where AI <span style="color:var(--rose)">trips you up</span> — and how to catch it</h2>
+    <h3 class="subtle">Every technique in this deck is also a way to confidently produce wrong work. Know these pitfalls before your SBA.</h3>
+
+    <div class="grid g2" style="margin-top:18px;flex:1;gap:12px;align-items:start">
+      <div class="pitfall-block">
+        <b>1. Made-up WCAG criterion numbers.</b><br>
+        <span style="font-size:11.5px">Without context, LLMs occasionally cite "WCAG 2.5.7" or other non-existent criteria.</span><br>
+        <b style="color:#065F46">Fix:</b> <span style="font-size:11.5px;color:var(--slate-700)">Always paste the WCAG context block. Always verify criterion numbers against W3C's official list.</span>
+      </div>
+      <div class="pitfall-block">
+        <b>2. Over-reliance on ARIA.</b><br>
+        <span style="font-size:11.5px">The AI loves to sprinkle aria-label, aria-labelledby, role="..." everywhere — even where native HTML would work.</span><br>
+        <b style="color:#065F46">Fix:</b> <span style="font-size:11.5px;color:var(--slate-700)">Always include the "First Rule of ARIA — prefer semantic HTML" constraint in your prompt.</span>
+      </div>
+      <div class="pitfall-block">
+        <b>3. False positives in audits.</b><br>
+        <span style="font-size:11.5px">AI flags color contrast violations from inline styles when the actual computed style is fine. It can't see the rendered DOM.</span><br>
+        <b style="color:#065F46">Fix:</b> <span style="font-size:11.5px;color:var(--slate-700)">For contrast checks, verify with browser DevTools or axe DevTools before filing. Don't trust HTML-only inference.</span>
+      </div>
+      <div class="pitfall-block">
+        <b>4. Generic, non-specific recommendations.</b><br>
+        <span style="font-size:11.5px">"Add alt text" — but to which image? "Improve contrast" — to what ratio? Useless tickets.</span><br>
+        <b style="color:#065F46">Fix:</b> <span style="font-size:11.5px;color:var(--slate-700)">Add the constraint "be specific to this snippet, no generic advice" to every audit prompt.</span>
+      </div>
+      <div class="pitfall-block">
+        <b>5. Broken Playwright code.</b><br>
+        <span style="font-size:11.5px">AI sometimes uses older axe-core APIs or missing imports. Doesn't run on first try.</span><br>
+        <b style="color:#065F46">Fix:</b> <span style="font-size:11.5px;color:var(--slate-700)">Always run what the AI generates. If it errors, paste the error back into the chat and say "fix this." Two rounds usually does it.</span>
+      </div>
+      <div class="pitfall-block">
+        <b>6. Confident hallucinated fixes.</b><br>
+        <span style="font-size:11.5px">"Add role='presentation' to the table." (Don't.) AI sometimes confidently suggests fixes that worsen accessibility.</span><br>
+        <b style="color:#065F46">Fix:</b> <span style="font-size:11.5px;color:var(--slate-700)">If a suggested fix surprises you, look it up before applying. Trust your training over the model when they conflict.</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>18 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 19: VERIFICATION HABITS ========================= -->
+<section class="slide dark">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">The four-step verify habit</div></div>
+    <h2 class="title" style="color:#fff">Before you file <span style="background:linear-gradient(90deg,#34D399,#06B6D4,#a5b4fc);-webkit-background-clip:text;background-clip:text;color:transparent">anything</span> the AI wrote</h2>
+    <h3 class="subtle">Build this habit on day one. It's the difference between a strong a11y engineer and someone who outsourced their judgment.</h3>
+
+    <div class="grid g4" style="margin-top:22px;flex:1">
+      <div class="card glass">
+        <div style="font-size:32px;font-weight:800;color:#34D399;letter-spacing:-.02em">1</div>
+        <div style="font-size:14px;font-weight:800;color:#fff;margin-top:6px">Verify WCAG numbers</div>
+        <p style="font-size:11.5px;color:#cbd5e1;margin-top:8px;line-height:1.5">Open <a style="color:#a5b4fc">w3.org/WAI/WCAG22/quickref</a> and confirm every criterion number cited. Takes 30 seconds, catches the most common AI mistake.</p>
+      </div>
+      <div class="card glass">
+        <div style="font-size:32px;font-weight:800;color:#06B6D4;letter-spacing:-.02em">2</div>
+        <div style="font-size:14px;font-weight:800;color:#fff;margin-top:6px">Test the fix in the browser</div>
+        <p style="font-size:11.5px;color:#cbd5e1;margin-top:8px;line-height:1.5">For ARIA/HTML fixes — actually paste them into a browser. Verify with axe DevTools or NVDA before sending the suggestion to a dev.</p>
+      </div>
+      <div class="card glass">
+        <div style="font-size:32px;font-weight:800;color:#a5b4fc;letter-spacing:-.02em">3</div>
+        <div style="font-size:14px;font-weight:800;color:#fff;margin-top:6px">Run the test script</div>
+        <p style="font-size:11.5px;color:#cbd5e1;margin-top:8px;line-height:1.5">For Playwright code — <code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:4px;color:#a5b4fc;font-family:monospace;font-size:11px">npx playwright test</code> it. If it errors, iterate with the AI. Don't ship untested code.</p>
+      </div>
+      <div class="card glass">
+        <div style="font-size:32px;font-weight:800;color:#c4b5fd;letter-spacing:-.02em">4</div>
+        <div style="font-size:14px;font-weight:800;color:#fff;margin-top:6px">Sanity-check against your training</div>
+        <p style="font-size:11.5px;color:#cbd5e1;margin-top:8px;line-height:1.5">If the AI suggests something that contradicts what you learned in onboarding — pause. Look it up. Your knowledge is the override.</p>
+      </div>
+    </div>
+
+    <div class="tip-block" style="margin-top:16px;background:rgba(165,180,252,.1);border-color:rgba(165,180,252,.25)"><b style="color:#fff">Time math:</b> Without AI = 60 min per audit. With AI (no verification) = 8 min, low quality. With AI + 4-step verification = 20 min, high quality. That's still <b style="color:#34D399">3x faster than manual</b>, and the work you ship is trustworthy.</div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>19 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 20: SBA PREP ========================= -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="top-row"><div class="brand"><div class="brand-mark">A</div>A11y · L&amp;D</div><div class="kicker">SBA prep</div></div>
+    <h2 class="title">What you should be able to <span style="background:linear-gradient(90deg,#10B981,#06B6D4);-webkit-background-clip:text;background-clip:text;color:transparent">demonstrate</span></h2>
+    <h3 class="subtle">If your SBA gives you a broken page and a chat tab, here's what a confident demonstration looks like.</h3>
+
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px;flex:1">
+      <div class="anat-box b1">
+        <div class="at">DEMONSTRATE</div>
+        <h5>Open Claude/ChatGPT/Gemini and run a full audit prompt with WCAG context grounding</h5>
+        <p>The assessor wants to see the WCAG context block, the role+task+format pattern, and the structured output. Show them you understand the *anatomy*, not just the words.</p>
+      </div>
+      <div class="anat-box b2">
+        <div class="at">DEMONSTRATE</div>
+        <h5>Chain audit output → defect writer prompt for one violation</h5>
+        <p>Take one issue from the audit and produce a complete JIRA-format ticket. Mention the Priority field and the {{BUILD_LINK}} placeholder — that signals you understand the team's standards.</p>
+      </div>
+      <div class="anat-box b3">
+        <div class="at">DEMONSTRATE</div>
+        <h5>Generate a fix for one violation with First Rule of ARIA applied</h5>
+        <p>Pick one violation. Get the AI to produce a fixed snippet. Explain why semantic HTML beats ARIA. Bonus: paste the fix into a browser and confirm it passes axe DevTools.</p>
+      </div>
+      <div class="anat-box b4">
+        <div class="at">DEMONSTRATE</div>
+        <h5>Generate and explain a Playwright + axe-core test script</h5>
+        <p>Run the base prompt, walk through the generated code. If you can run it locally, even better. Mention what you'd add for a real project (CI/CD integration, custom rules, report storage).</p>
+      </div>
+      <div class="anat-box b5">
+        <div class="at">DEMONSTRATE</div>
+        <h5>Identify at least one thing the AI got wrong — and correct it</h5>
+        <p>This is the most important moment. Showing critical thinking — "the AI suggested this, but it's wrong because..." — is what separates a passing demo from a strong one.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><div class="brand"><div class="brand-mark" style="width:18px;height:18px;font-size:10px;border-radius:5px">A</div>A11y L&amp;D</div><div><span class="dot"></span>20 / 21</div></div>
+</section>
+
+<!-- ========================= SLIDE 21: THANK YOU ========================= -->
+<section class="slide title-slide">
+  <div class="glow g1"></div>
+  <div class="glow g2"></div>
+  <div class="slide-inner" style="align-items:center;justify-content:center;padding:0;text-align:center">
+    <div class="brand-mark" style="width:56px;height:56px;border-radius:14px;font-size:26px">A</div>
+    <div class="mega" style="font-size:60px;margin-top:18px">Try this <span class="grad">tonight.</span></div>
+    <div class="tag" style="margin-top:10px">The cheatsheet has every prompt ready to copy. Open a chat tab, grab a real HTML snippet from a project, and run it. By the time you're done with the SBA, this should feel routine.</div>
+
+    <div style="margin-top:30px;display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:760px">
+      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 20px;min-width:200px">
+        <div style="font-size:11px;font-weight:800;letter-spacing:.1em;color:#a5b4fc">RESOURCE 1</div>
+        <div style="font-size:13px;color:#fff;margin-top:4px">Cheatsheet with all prompts + sample HTML</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 20px;min-width:200px">
+        <div style="font-size:11px;font-weight:800;letter-spacing:.1em;color:#a5b4fc">RESOURCE 2</div>
+        <div style="font-size:13px;color:#fff;margin-top:4px">W3C WCAG 2.2 Quick Reference</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 20px;min-width:200px">
+        <div style="font-size:11px;font-weight:800;letter-spacing:.1em;color:#a5b4fc">RESOURCE 3</div>
+        <div style="font-size:13px;color:#fff;margin-top:4px">Deque University free courses</div>
+      </div>
+    </div>
+
+    <div style="margin-top:30px;font-size:14px;color:#94a3b8;max-width:600px;line-height:1.6">Three habits to take with you: <b style="color:#34D399">prompt with context</b>, <b style="color:#06B6D4">always verify</b>, <b style="color:#a5b4fc">explain what the AI gets wrong</b>.</div>
+
+    <div style="margin-top:24px;font-size:11px;color:#64748B;letter-spacing:.12em">USE ← → ARROWS · F FOR FULLSCREEN · HOME / END TO JUMP</div>
+  </div>
+</section>
+
+</div>
+
+<div class="nav">
+  <button id="prev" aria-label="Previous">‹</button>
+  <span class="count"><span id="cur">1</span> / <span id="tot">21</span></span>
+  <button id="next" aria-label="Next">›</button>
+</div>
+
+</div>
+
+<script>
+(function(){
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let idx = 0;
+  const bar = document.getElementById('bar');
+  const cur = document.getElementById('cur');
+  const tot = document.getElementById('tot');
+  tot.textContent = total;
+
+  function go(n){
+    idx = Math.max(0, Math.min(total - 1, n));
+    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+    cur.textContent = idx + 1;
+    bar.style.width = ((idx + 1) / total * 100) + '%';
+  }
+
+  document.getElementById('prev').addEventListener('click', () => go(idx - 1));
+  document.getElementById('next').addEventListener('click', () => go(idx + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(idx + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(idx - 1); }
+    else if (e.key === 'Home') { go(0); }
+    else if (e.key === 'End') { go(total - 1); }
+    else if (e.key === 'f' || e.key === 'F') {
+      const el = document.documentElement;
+      if (!document.fullscreenElement) el.requestFullscreen && el.requestFullscreen();
+      else document.exitFullscreen && document.exitFullscreen();
+    }
+  });
+
+  go(0);
+})();
+</script>
